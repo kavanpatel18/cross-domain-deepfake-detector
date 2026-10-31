@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local datasets and trained weights
+/data/*
+!/data/.gitkeep
+/checkpoints/*.pt
+/checkpoints/*.pth
+/checkpoints/*.ckpt
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.vscode/

@@ -93,12 +93,12 @@ The `--sbi-ratio` flag (default `0.0`, recommended starting value `0.3`) manufac
 - **OOD integrity:** SBI only samples real faces from **Environments A and B**. FaceForensics++ (**Environment C**) is strictly untouched and remains a pure, held-out out-of-distribution benchmark.
 
 
-Both write a checkpoint to `checkpoints/model_adv.pt` /
-`checkpoints/model_baseline.pt`, plus a per-epoch training-history JSON.
-Since the backbone is frozen, only the two small heads train — this is
-fast even on a free Colab T4 (the earlier scoped-MVP plan estimated this
-as "nearly free" per epoch, since CLIP's forward pass under `torch.no_grad()`
-is the only backbone-side compute).
+Each run writes a checkpoint (`checkpoints/model_adv.pt` or
+`checkpoints/model_baseline.pt`) and a per-epoch training-history JSON.
+LoRA is enabled by default: the pretrained CLIP weights stay frozen while
+small LoRA adapters and the two classifier heads train. Set `--use-lora 0`
+to train only the heads with a fully frozen backbone. Runtime depends on
+the dataset, device, and selected configuration.
 
 ## 4. Evaluate — this produces the actual ablation table
 
@@ -156,15 +156,22 @@ plt.savefig("checkpoints/ablation_chart.png", dpi=150, bbox_inches="tight")
 
 ```
 src/
-  grl.py         Gradient Reversal Layer (unit-tested — see tests/)
-  model.py        Frozen CLIP backbone + Real/Fake head + Generator-ID head
-  losses.py       Combined loss, fake-only masking for the adversarial term
-  dataset.py      3-environment leave-one-out dataset + CLIP preprocessing
-  train.py        Training loop, --adversarial 0/1 for the ablation rows
-  evaluate.py     ID/OOD metrics, generalization gap, JPEG robustness, ablation table
-  app.py          Gradio demo
+  app.py             Gradio image-classification demo
+  dataset.py         Three-environment data loading and preprocessing
+  evaluate.py        ID/OOD metrics, robustness checks, and ablation output
+  evaluate_fusion.py Evaluation for the RGB/frequency fusion baseline
+  fusion_model.py    RGB/frequency fusion baseline
+  grl.py             Gradient Reversal Layer
+  losses.py          Classification and generator-adversarial losses
+  model.py           CLIP detector with optional LoRA adapters
+  plot_ablation.py   Ablation chart generation
+  sbi.py             Self-Blended Images augmentation
+  train.py           CLIP detector training
+  train_fusion.py    RGB/frequency baseline training
 tests/
-  test_pipeline.py  Sanity checks (GRL math, shapes, no-crash end-to-end run)
+  test_pipeline.py   Offline mechanics and pipeline checks
+checkpoints/           Evaluation histories and selected result figures
+data/                  Local datasets (not tracked)
 requirements.txt
 ```
 
